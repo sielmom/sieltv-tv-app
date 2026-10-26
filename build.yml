@@ -1,0 +1,40 @@
+# GitHub가 시엘TV TV 앱 설치 파일(APK)을 자동으로 만들어 줘요.
+# 파일을 올리거나 Actions 화면에서 "Run workflow"를 누르면 몇 분 뒤 Releases에 sieltv-tv.apk가 생겨요.
+name: Build SielTV TV app
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Build APK
+        run: gradle :app:assembleDebug --no-daemon
+
+      - name: Rename
+        run: cp app/build/outputs/apk/debug/app-debug.apk sieltv-tv.apk
+
+      - name: Publish to Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: tv-app-${{ github.run_number }}
+          name: 시엘TV TV 앱 ${{ github.run_number }}
+          make_latest: true
+          files: sieltv-tv.apk
